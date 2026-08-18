@@ -168,7 +168,7 @@ try {
       localStorage.removeItem("attendance-pwa.state.v1");
       await Promise.all(
         (await caches.keys())
-          .filter((key) => key.startsWith("otmetka-attendance-pwa-"))
+        .filter((key) => key.startsWith("otmetka-pwa-fresh-"))
           .map((key) => caches.delete(key))
       );
       await Promise.all(
@@ -229,7 +229,7 @@ try {
     statuses: [...document.querySelectorAll(".person-card")].map((card) => card.dataset.status),
     shareReady: !document.querySelector("#shareButton").disabled,
     shareFilesSupported: Boolean(navigator.share && navigator.canShare?.({ files: [new File(["x"], "x.png", { type: "image/png" })] })),
-    offlineAssets: await caches.open((await caches.keys()).find((key) => key.startsWith("otmetka-attendance-pwa-"))).then((cache) => cache.keys()).then((keys) => keys.length)
+    offlineAssets: await caches.open((await caches.keys()).find((key) => key.startsWith("otmetka-pwa-fresh-"))).then((cache) => cache.keys()).then((keys) => keys.length)
   }))()`);
   if (JSON.stringify(marked.statuses) !== JSON.stringify(["present", "sick", "drunk", "absent"])) {
     throw new Error(`Status marking failed: ${JSON.stringify(marked)}`);
@@ -353,7 +353,7 @@ try {
       localStorage.removeItem("attendance-pwa.state.v1");
       await Promise.all(
         (await caches.keys())
-          .filter((key) => key.startsWith("otmetka-attendance-pwa-"))
+          .filter((key) => key.startsWith("otmetka-pwa-fresh-"))
           .map((key) => caches.delete(key))
       );
       await Promise.all(

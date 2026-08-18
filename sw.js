@@ -1,5 +1,5 @@
-const CACHE_PREFIX = "otmetka-attendance-pwa-";
-const CACHE_NAME = `${CACHE_PREFIX}shell-v3`;
+const CACHE_PREFIX = "otmetka-pwa-fresh-";
+const CACHE_NAME = `${CACHE_PREFIX}shell-v1`;
 const APP_SHELL = [
   "./",
   "./index.html",
