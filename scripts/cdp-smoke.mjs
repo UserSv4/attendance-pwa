@@ -152,26 +152,39 @@ try {
     throw new Error(`Condition timed out: ${expression}. Browser errors: ${errors.join(" | ") || "none"}`);
   };
 
+  if (process.env.FULL_ORIGIN_RESET === "1") {
+    await connection.send("Storage.clearDataForOrigin", {
+      origin: new URL(appUrl).origin,
+      storageTypes: "all"
+    }, sessionId);
+  }
   await navigate(appUrl);
-  await evaluate(`(async () => {
-    localStorage.removeItem("attendance-pwa.state.v1");
-    await Promise.all(
-      (await caches.keys())
-        .filter((key) => key.startsWith("otmetka-attendance-pwa-"))
-        .map((key) => caches.delete(key))
-    );
-    await Promise.all(
-      (await navigator.serviceWorker.getRegistrations())
-        .filter((registration) => new URL(registration.scope).pathname === ${JSON.stringify(appScopePath)})
-        .map((registration) => registration.unregister())
-    );
-    await new Promise((resolve) => {
-      const request = indexedDB.deleteDatabase("attendance-pwa");
-      request.onsuccess = request.onerror = request.onblocked = resolve;
-    });
-    return true;
-  })()`);
-  await reload();
+  if (process.env.FULL_ORIGIN_RESET !== "1") {
+    await evaluate(`(async () => {
+      await Promise.race([
+        navigator.serviceWorker.ready.catch(() => null),
+        new Promise((resolve) => setTimeout(resolve, 5000))
+      ]);
+      localStorage.removeItem("attendance-pwa.state.v1");
+      await Promise.all(
+        (await caches.keys())
+          .filter((key) => key.startsWith("otmetka-attendance-pwa-"))
+          .map((key) => caches.delete(key))
+      );
+      await Promise.all(
+        (await navigator.serviceWorker.getRegistrations())
+          .filter((registration) => new URL(registration.scope).pathname === ${JSON.stringify(appScopePath)})
+          .map((registration) => registration.unregister())
+      );
+      await new Promise((resolve) => {
+        const request = indexedDB.deleteDatabase("attendance-pwa");
+        request.onsuccess = request.onerror = request.onblocked = resolve;
+      });
+      return true;
+    })()`);
+    await navigate("about:blank");
+    await navigate(appUrl);
+  }
   await waitFor(`document.querySelectorAll(".date-button").length === 7`);
 
   const initial = await evaluate(`({

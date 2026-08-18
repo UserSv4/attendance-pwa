@@ -86,6 +86,7 @@ let toastTimer = null;
 let toastActionHandler = null;
 let offlineReady = false;
 let deferredInstallPrompt = null;
+let activeServiceWorkerRegistration = null;
 
 const isStandalone = () =>
   window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone === true;
@@ -679,6 +680,11 @@ function updateReadiness() {
   elements.readinessText.textContent = "Готовим приложение для работы офлайн…";
 }
 
+function requestServiceWorkerUpdate() {
+  if (!navigator.onLine || !activeServiceWorkerRegistration) return;
+  void activeServiceWorkerRegistration.update().catch(() => undefined);
+}
+
 function verifyServiceWorkerCache(registration) {
   return new Promise((resolve) => {
     const worker = registration.active ?? registration.waiting ?? registration.installing;
@@ -706,8 +712,21 @@ async function initializeServiceWorker() {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    let reloadingForUpdate = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController || reloadingForUpdate) return;
+      reloadingForUpdate = true;
+      window.location.reload();
+    }, { once: true });
+
+    const registration = await navigator.serviceWorker.register("./sw.js", {
+      scope: "./",
+      updateViaCache: "none"
+    });
+    activeServiceWorkerRegistration = registration;
     await navigator.serviceWorker.ready;
+    requestServiceWorkerUpdate();
     offlineReady = await verifyServiceWorkerCache(registration);
     updateReadiness();
     if (offlineReady && isStandalone()) void requestPersistentStorage();
@@ -811,10 +830,16 @@ function bindEvents() {
     });
   });
 
-  window.addEventListener("online", updateReadiness);
+  window.addEventListener("online", () => {
+    updateReadiness();
+    requestServiceWorkerUpdate();
+  });
   window.addEventListener("offline", updateReadiness);
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") checkForNewDay();
+    if (document.visibilityState === "visible") {
+      checkForNewDay();
+      requestServiceWorkerUpdate();
+    }
   });
 }
 
