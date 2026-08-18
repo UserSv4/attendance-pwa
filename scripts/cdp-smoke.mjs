@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 
 const browserUrl = process.env.CDP_URL ?? "http://127.0.0.1:9222";
 const appUrl = process.env.APP_URL ?? "http://127.0.0.1:4173/";
+const appScopePath = new URL("./", appUrl).pathname;
 const artifactsDirectory = fileURLToPath(new URL("../test-artifacts/", import.meta.url));
 
 class CdpConnection {
@@ -153,9 +154,17 @@ try {
 
   await navigate(appUrl);
   await evaluate(`(async () => {
-    localStorage.clear();
-    await Promise.all((await caches.keys()).map((key) => caches.delete(key)));
-    await Promise.all((await navigator.serviceWorker.getRegistrations()).map((registration) => registration.unregister()));
+    localStorage.removeItem("attendance-pwa.state.v1");
+    await Promise.all(
+      (await caches.keys())
+        .filter((key) => key.startsWith("otmetka-attendance-pwa-"))
+        .map((key) => caches.delete(key))
+    );
+    await Promise.all(
+      (await navigator.serviceWorker.getRegistrations())
+        .filter((registration) => new URL(registration.scope).pathname === ${JSON.stringify(appScopePath)})
+        .map((registration) => registration.unregister())
+    );
     await new Promise((resolve) => {
       const request = indexedDB.deleteDatabase("attendance-pwa");
       request.onsuccess = request.onerror = request.onblocked = resolve;
@@ -283,6 +292,27 @@ try {
 
   if (errors.length) throw new Error(`Browser errors: ${errors.join(" | ")}`);
   process.stdout.write(`${JSON.stringify({ initial, marked, layout, overview, persisted, inherited, offline }, null, 2)}\n`);
+
+  if (process.env.CLEANUP_AFTER === "1") {
+    await evaluate(`(async () => {
+      localStorage.removeItem("attendance-pwa.state.v1");
+      await Promise.all(
+        (await caches.keys())
+          .filter((key) => key.startsWith("otmetka-attendance-pwa-"))
+          .map((key) => caches.delete(key))
+      );
+      await Promise.all(
+        (await navigator.serviceWorker.getRegistrations())
+          .filter((registration) => new URL(registration.scope).pathname === ${JSON.stringify(appScopePath)})
+          .map((registration) => registration.unregister())
+      );
+      await new Promise((resolve) => {
+        const request = indexedDB.deleteDatabase("attendance-pwa");
+        request.onsuccess = request.onerror = request.onblocked = resolve;
+      });
+      return true;
+    })()`);
+  }
 } finally {
   if (targetId) await connection.send("Target.closeTarget", { targetId }).catch(() => undefined);
   connection.close();
