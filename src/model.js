@@ -264,7 +264,7 @@ export function getEntry(state, dateKey, personId) {
 }
 
 export function getDailyCounts(state, dateKey) {
-  const counts = { present: 0, sick: 0, drunk: 0, missing: 0, total: 0 };
+  const counts = { present: 0, sick: 0, drunk: 0, absent: 0, missing: 0, total: 0 };
   const day = state.attendance[dateKey] ?? {};
 
   for (const person of getActivePeople(state)) {

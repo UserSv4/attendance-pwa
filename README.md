@@ -9,7 +9,7 @@ Live app: **https://usersv4.github.io/attendance-pwa/**
 ## What it does
 
 - Keeps an editable, reorderable roster on the device.
-- Shows `Присутствует` in orange, `Заболел` in green, and `Забухал` in red.
+- Shows `Присутствует` in orange, `Заболел` in green, and both `Забухал` and `Нету` in red.
 - Makes every deliberate choice that person's default for the next new day.
 - Initializes today from those defaults; days never opened remain unknown (`—`).
 - Stores history indefinitely while the current UI and PNG show the latest seven days.

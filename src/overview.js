@@ -188,8 +188,8 @@ function drawTotals(context, state, dateKeys, allPeople, peopleCount, tableWidth
       weight: 850,
       color: STATUS_META.present.darkColor
     });
-    drawCenteredText(context, `Б ${counts.sick}  ·  З ${counts.drunk}`, centerX, y + 67, {
-      size: 14,
+    drawCenteredText(context, `Б ${counts.sick} · З ${counts.drunk} · Н ${counts.absent}`, centerX, y + 67, {
+      size: 12,
       weight: 720,
       color: "#75695F"
     });
@@ -210,7 +210,7 @@ function drawFooter(context, footerTop, pageNumber, pageCount) {
     context.textBaseline = "middle";
     const label = status === "present" ? "Присутствует" : meta.compactLabel;
     context.fillText(label, x + 43, legendY);
-    x += status === "present" ? 220 : 198;
+    x += status === "present" ? 220 : 190;
   }
 
   context.fillStyle = "#A09489";

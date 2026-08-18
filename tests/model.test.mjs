@@ -27,6 +27,7 @@ test("new roster entries start present for a zero-tap first day", () => {
     present: 2,
     sick: 0,
     drunk: 0,
+    absent: 0,
     missing: 0,
     total: 2
   });
@@ -43,6 +44,17 @@ test("manual choices become defaults without changing initialized history", () =
   setPersonStatus(state, "2026-08-18", person.id, "drunk", 5);
   assert.equal(getEntry(state, "2026-08-17", person.id).status, "sick");
   assert.equal(person.defaultStatus, "drunk");
+});
+
+test("Нету is a persistent red attendance status and next-day default", () => {
+  const state = createEmptyState(1);
+  const [person] = addPeople(state, "Анна", "2026-08-17", 2);
+  setPersonStatus(state, "2026-08-17", person.id, "absent", 3);
+  initializeDay(state, "2026-08-18", { seedDefaults: true, timestamp: 4 });
+
+  assert.equal(person.defaultStatus, "absent");
+  assert.equal(getEntry(state, "2026-08-18", person.id).status, "absent");
+  assert.equal(getDailyCounts(state, "2026-08-18").absent, 1);
 });
 
 test("unopened past days stay blank until explicitly filled", () => {
@@ -81,10 +93,10 @@ test("archived people leave the live roster but remain in seven-day overview", (
 test("versioned backups restore roster and attendance", () => {
   const state = createEmptyState(1);
   const [person] = addPeople(state, "Анна", "2026-08-18", 2);
-  setPersonStatus(state, "2026-08-18", person.id, "drunk", 3);
+  setPersonStatus(state, "2026-08-18", person.id, "absent", 3);
   const restored = restoreBackupPayload(createBackupPayload(state, 4), 5);
 
   assert.equal(restored.people[0].name, "Анна");
-  assert.equal(restored.people[0].defaultStatus, "drunk");
-  assert.equal(getEntry(restored, "2026-08-18", restored.people[0].id).status, "drunk");
+  assert.equal(restored.people[0].defaultStatus, "absent");
+  assert.equal(getEntry(restored, "2026-08-18", restored.people[0].id).status, "absent");
 });

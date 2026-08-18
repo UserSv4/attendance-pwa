@@ -215,7 +215,8 @@ function renderSummary() {
   const chips = [
     ["present", `Здесь ${counts.present}`],
     ["sick", `Болеют ${counts.sick}`],
-    ["drunk", `Забухали ${counts.drunk}`]
+    ["drunk", `Забухали ${counts.drunk}`],
+    ["absent", `Нету ${counts.absent}`]
   ];
   if (counts.missing > 0) chips.unshift(["missing", `Не отмечено ${counts.missing}`]);
 

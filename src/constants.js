@@ -1,7 +1,7 @@
 export const SCHEMA_VERSION = 1;
 export const HISTORY_WINDOW_DAYS = 7;
 
-export const STATUS_KEYS = Object.freeze(["present", "sick", "drunk"]);
+export const STATUS_KEYS = Object.freeze(["present", "sick", "drunk", "absent"]);
 
 export const STATUS_META = Object.freeze({
   present: Object.freeze({
@@ -27,6 +27,15 @@ export const STATUS_META = Object.freeze({
     compactLabel: "Забухал",
     summaryLabel: "Забухали",
     mark: "З",
+    color: "#D94D48",
+    softColor: "#FDEBEA",
+    darkColor: "#96312E"
+  }),
+  absent: Object.freeze({
+    label: "Нету",
+    compactLabel: "Нету",
+    summaryLabel: "Нету",
+    mark: "Н",
     color: "#D94D48",
     softColor: "#FDEBEA",
     darkColor: "#96312E"

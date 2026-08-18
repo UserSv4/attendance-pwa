@@ -18,6 +18,9 @@
   --drunk: #d94d48;
   --drunk-soft: #fdebea;
   --drunk-deep: #96312e;
+  --absent: #d94d48;
+  --absent-soft: #fdebea;
+  --absent-deep: #96312e;
   --accent: #6c4024;
   --shadow-sm: 0 1px 2px rgb(75 45 25 / 5%), 0 7px 24px rgb(75 45 25 / 5%);
   --shadow-lg: 0 20px 70px rgb(57 34 20 / 20%);
@@ -445,6 +448,8 @@ h1 {
 .summary-chip-sick::before { background: var(--sick); }
 .summary-chip-drunk { color: var(--drunk-deep); background: var(--drunk-soft); }
 .summary-chip-drunk::before { background: var(--drunk); }
+.summary-chip-absent { color: var(--absent-deep); background: var(--absent-soft); }
+.summary-chip-absent::before { background: var(--absent); }
 .summary-chip-missing { color: var(--ink-soft); background: #eee8e2; }
 .summary-chip-missing::before { background: var(--ink-faint); }
 
@@ -522,6 +527,7 @@ h1 {
 .person-card[data-status="present"]::before { background: var(--present); }
 .person-card[data-status="sick"]::before { background: var(--sick); }
 .person-card[data-status="drunk"]::before { background: var(--drunk); }
+.person-card[data-status="absent"]::before { background: var(--absent); }
 
 .person-name-row {
   display: flex;
@@ -552,7 +558,7 @@ h1 {
 
 .status-options {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 7px;
 }
 
@@ -624,6 +630,18 @@ h1 {
   color: #fff;
   border-color: var(--drunk);
   background: var(--drunk);
+}
+
+.status-button[data-status="absent"][aria-pressed="true"] {
+  color: var(--absent-deep);
+  border-color: #e8aaa7;
+  background: var(--absent-soft);
+}
+
+.status-button[data-status="absent"][aria-pressed="true"] .status-button-mark {
+  color: #fff;
+  border-color: var(--absent);
+  background: var(--absent);
 }
 
 .person-card.just-changed {

@@ -186,18 +186,30 @@ try {
 
   await evaluate(`(() => {
     document.querySelector("#manageButton").click();
-    document.querySelector("#peopleInput").value = "Анна Смирнова\\nБорис Петров\\nВиктор Соколов";
+    document.querySelector("#peopleInput").value = "Анна Смирнова\\nБорис Петров\\nВиктор Соколов\\nГалина Орлова";
     document.querySelector("#addPeopleForm").requestSubmit();
     return true;
   })()`);
-  await waitFor(`document.querySelectorAll(".person-card").length === 3`);
+  await waitFor(`document.querySelectorAll(".person-card").length === 4`);
   await evaluate(`(() => {
     document.querySelectorAll(".person-card")[1].querySelector('[data-status="sick"]').click();
     document.querySelectorAll(".person-card")[2].querySelector('[data-status="drunk"]').click();
+    document.querySelectorAll(".person-card")[3].querySelector('[data-status="absent"]').click();
     return true;
   })()`);
   await waitFor(`!document.querySelector("#shareButton").disabled`);
-  await waitFor(`document.querySelector("#readinessText").textContent.includes("Готово офлайн")`, 20_000);
+  try {
+    await waitFor(`document.querySelector("#readinessText").textContent.includes("Готово офлайн")`, 20_000);
+  } catch (error) {
+    const offlineDiagnostics = await evaluate(`(async () => ({
+      readiness: document.querySelector("#readinessText")?.textContent,
+      secureContext: window.isSecureContext,
+      controller: navigator.serviceWorker.controller?.scriptURL ?? null,
+      registrations: (await navigator.serviceWorker.getRegistrations()).map((registration) => ({ scope: registration.scope, active: registration.active?.scriptURL ?? null })),
+      caches: await Promise.all((await caches.keys()).map(async (key) => ({ key, entries: (await (await caches.open(key)).keys()).length })))
+    }))()`);
+    throw new Error(`${error.message}. Offline diagnostics: ${JSON.stringify(offlineDiagnostics)}`);
+  }
 
   const marked = await evaluate(`(async () => ({
     names: [...document.querySelectorAll(".person-name")].map((item) => item.textContent),
@@ -206,7 +218,7 @@ try {
     shareFilesSupported: Boolean(navigator.share && navigator.canShare?.({ files: [new File(["x"], "x.png", { type: "image/png" })] })),
     offlineAssets: await caches.open((await caches.keys()).find((key) => key.startsWith("otmetka-attendance-pwa-"))).then((cache) => cache.keys()).then((keys) => keys.length)
   }))()`);
-  if (JSON.stringify(marked.statuses) !== JSON.stringify(["present", "sick", "drunk"])) {
+  if (JSON.stringify(marked.statuses) !== JSON.stringify(["present", "sick", "drunk", "absent"])) {
     throw new Error(`Status marking failed: ${JSON.stringify(marked)}`);
   }
   if (!marked.shareReady || marked.offlineAssets < 15) throw new Error(`App did not become ready: ${JSON.stringify(marked)}`);
@@ -222,12 +234,42 @@ try {
       minimumStatusHeight: Math.min(...statusButtons.map((rect) => rect.height)),
       shareTop: shareButton.top,
       shareBottom: shareButton.bottom,
-      dateButtons: document.querySelectorAll(".date-button").length
+      dateButtons: document.querySelectorAll(".date-button").length,
+      statusButtonsPerPerson: Math.min(...[...document.querySelectorAll(".person-card")].map((card) => card.querySelectorAll(".status-button").length))
     };
   })()`);
-  if (layout.scrollWidth > layout.viewportWidth || layout.minimumStatusHeight < 44 || layout.minimumStatusWidth < 80) {
+  if (layout.scrollWidth > layout.viewportWidth || layout.minimumStatusHeight < 44 || layout.minimumStatusWidth < 64 || layout.statusButtonsPerPerson !== 4) {
     throw new Error(`Mobile layout check failed: ${JSON.stringify(layout)}`);
   }
+
+  await connection.send("Emulation.setDeviceMetricsOverride", {
+    width: 320,
+    height: 700,
+    deviceScaleFactor: 2,
+    mobile: true,
+    screenWidth: 320,
+    screenHeight: 700
+  }, sessionId);
+  const compactLayout = await evaluate(`(() => {
+    const statusButtons = [...document.querySelectorAll(".status-button")].map((button) => button.getBoundingClientRect());
+    return {
+      viewportWidth: innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      minimumStatusWidth: Math.min(...statusButtons.map((rect) => rect.width)),
+      minimumStatusHeight: Math.min(...statusButtons.map((rect) => rect.height))
+    };
+  })()`);
+  if (compactLayout.scrollWidth > compactLayout.viewportWidth || compactLayout.minimumStatusHeight < 44 || compactLayout.minimumStatusWidth < 56) {
+    throw new Error(`Compact mobile layout check failed: ${JSON.stringify(compactLayout)}`);
+  }
+  await connection.send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 2,
+    mobile: true,
+    screenWidth: 390,
+    screenHeight: 844
+  }, sessionId);
 
   await mkdir(artifactsDirectory, { recursive: true });
 
@@ -255,7 +297,7 @@ try {
   }
 
   await reload();
-  await waitFor(`document.querySelectorAll(".person-card").length === 3`);
+  await waitFor(`document.querySelectorAll(".person-card").length === 4`);
   const persisted = await evaluate(`({
     names: [...document.querySelectorAll(".person-name")].map((item) => item.textContent),
     statuses: [...document.querySelectorAll(".person-card")].map((card) => card.dataset.status)
@@ -265,10 +307,10 @@ try {
   }
 
   await evaluate(`document.querySelectorAll(".date-button")[5].click()`);
-  await waitFor(`document.querySelector(".summary-chip-missing")?.textContent.includes("3")`);
+  await waitFor(`document.querySelector(".summary-chip-missing")?.textContent.includes("4")`);
   await evaluate(`document.querySelector("#fillDefaultsButton").click()`);
   const inherited = await evaluate(`[...document.querySelectorAll(".person-card")].map((card) => card.dataset.status)`);
-  if (JSON.stringify(inherited) !== JSON.stringify(["present", "sick", "drunk"])) {
+  if (JSON.stringify(inherited) !== JSON.stringify(["present", "sick", "drunk", "absent"])) {
     throw new Error(`Sticky defaults failed: ${JSON.stringify(inherited)}`);
   }
 
@@ -279,9 +321,9 @@ try {
     uploadThroughput: 0
   }, sessionId);
   await reload();
-  await waitFor(`document.querySelectorAll(".person-card").length === 3`);
+  await waitFor(`document.querySelectorAll(".person-card").length === 4`);
   const offline = await evaluate(`({ title: document.title, people: document.querySelectorAll(".person-card").length, ready: document.querySelector("#readinessText").textContent })`);
-  if (offline.people !== 3 || offline.title !== "Отметка") throw new Error(`Offline reload failed: ${JSON.stringify(offline)}`);
+  if (offline.people !== 4 || offline.title !== "Отметка") throw new Error(`Offline reload failed: ${JSON.stringify(offline)}`);
 
   await connection.send("Network.emulateNetworkConditions", {
     offline: false,
@@ -291,7 +333,7 @@ try {
   }, sessionId);
 
   if (errors.length) throw new Error(`Browser errors: ${errors.join(" | ")}`);
-  process.stdout.write(`${JSON.stringify({ initial, marked, layout, overview, persisted, inherited, offline }, null, 2)}\n`);
+  process.stdout.write(`${JSON.stringify({ initial, marked, layout, compactLayout, overview, persisted, inherited, offline }, null, 2)}\n`);
 
   if (process.env.CLEANUP_AFTER === "1") {
     await evaluate(`(async () => {
