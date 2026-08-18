@@ -213,14 +213,12 @@ function drawFooter(context, footerTop, pageNumber, pageCount) {
     x += status === "present" ? 220 : 190;
   }
 
-  context.fillStyle = "#A09489";
-  context.font = `550 16px ${FONT_FAMILY}`;
-  context.textAlign = "right";
-  context.fillText(
-    pageCount > 1 ? `Отметка · страница ${pageNumber} из ${pageCount}` : "Создано в приложении «Отметка»",
-    IMAGE_WIDTH - SIDE_MARGIN,
-    legendY
-  );
+  if (pageCount > 1) {
+    context.fillStyle = "#A09489";
+    context.font = `550 16px ${FONT_FAMILY}`;
+    context.textAlign = "right";
+    context.fillText(`Страница ${pageNumber} из ${pageCount}`, IMAGE_WIDTH - SIDE_MARGIN, legendY);
+  }
 }
 
 function canvasToBlob(canvas) {
