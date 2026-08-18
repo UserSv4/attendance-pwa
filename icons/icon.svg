@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Отметка">
+  <defs>
+    <linearGradient id="bg" x1="72" y1="48" x2="440" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9ED" />
+      <stop offset="1" stop-color="#FFE8C1" />
+    </linearGradient>
+    <filter id="shadow" x="50" y="60" width="412" height="408" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#8A4B17" flood-opacity=".16" />
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)" />
+  <g filter="url(#shadow)">
+    <rect x="84" y="94" width="344" height="324" rx="54" fill="#FFFDF9" />
+    <path d="M84 177c0-46 37-83 83-83h178c46 0 83 37 83 83v15H84v-15Z" fill="#F28C28" />
+    <rect x="151" y="66" width="31" height="79" rx="15.5" fill="#69391B" />
+    <rect x="330" y="66" width="31" height="79" rx="15.5" fill="#69391B" />
+    <circle cx="157" cy="264" r="29" fill="#F28C28" />
+    <path d="m145 264 9 9 17-20" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="256" cy="264" r="29" fill="#2E9B69" />
+    <path d="m244 264 9 9 17-20" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="355" cy="264" r="29" fill="#D94D48" />
+    <path d="m343 264 9 9 17-20" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" />
+    <rect x="128" y="327" width="256" height="28" rx="14" fill="#F2E8DC" />
+  </g>
+</svg>

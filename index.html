@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#fffaf2" />
+    <meta name="color-scheme" content="light" />
+    <meta name="description" content="Быстрая отметка посещаемости за 7 дней — полностью офлайн." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Отметка" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <title>Отметка</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./src/app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#attendanceList">К списку</a>
+
+    <div class="app-shell" id="appShell">
+      <header class="app-header">
+        <div class="brand-block">
+          <img class="brand-icon" src="./icons/icon.svg" alt="" width="48" height="48" />
+          <div>
+            <p class="eyebrow">ПОСЕЩАЕМОСТЬ</p>
+            <h1>Отметка</h1>
+          </div>
+        </div>
+        <button class="header-button" id="manageButton" type="button" aria-label="Открыть список людей">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+          <span>Люди</span>
+          <span class="people-count" id="peopleCount">0</span>
+        </button>
+      </header>
+
+      <aside class="install-card" id="installCard" hidden>
+        <div class="install-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 16V3M7 8l5-5 5 5M5 13v7h14v-7" /></svg>
+        </div>
+        <div class="install-card-copy">
+          <strong>Установите перед началом</strong>
+          <span>Так список останется в приложении и откроется без интернета.</span>
+        </div>
+        <button class="text-button" id="installHelpButton" type="button">Как</button>
+      </aside>
+
+      <aside class="readiness-card is-working" id="readinessCard" aria-live="polite">
+        <span class="readiness-dot" aria-hidden="true"></span>
+        <span id="readinessText">Готовим приложение для работы офлайн…</span>
+      </aside>
+
+      <main class="main-content">
+        <section class="date-panel" aria-labelledby="selectedDateTitle">
+          <div class="date-heading">
+            <div>
+              <p class="section-kicker" id="selectedDateLabel">СЕГОДНЯ</p>
+              <h2 id="selectedDateTitle">Загрузка…</h2>
+            </div>
+            <button class="today-button" id="todayButton" type="button" hidden>К сегодня</button>
+          </div>
+          <nav class="date-strip" id="dateStrip" aria-label="Последние семь дней"></nav>
+        </section>
+
+        <section class="daily-panel" id="dailyPanel">
+          <div class="daily-summary" id="dailySummary" aria-live="polite"></div>
+          <div class="quick-actions" id="quickActions">
+            <button class="quick-button quick-button-present" id="markAllPresentButton" type="button">
+              <span class="status-mark" aria-hidden="true">П</span>
+              Все здесь
+            </button>
+            <button class="quick-button" id="fillDefaultsButton" type="button">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" /></svg>
+              По привычке
+            </button>
+          </div>
+        </section>
+
+        <section class="empty-state" id="emptyState" hidden>
+          <div class="empty-illustration" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <h2>Добавьте людей один раз</h2>
+          <p>Можно вставить сразу весь список — по одному имени в строке.</p>
+          <button class="primary-button" id="emptyAddButton" type="button">Добавить людей</button>
+        </section>
+
+        <section class="attendance-list" id="attendanceList" aria-label="Отметки людей"></section>
+
+        <button class="add-inline-button" id="addInlineButton" type="button" hidden>
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+          Добавить человека
+        </button>
+      </main>
+
+      <footer class="share-bar">
+        <button class="share-button" id="shareButton" type="button" disabled>
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 16V3M7 8l5-5 5 5M5 13v7h14v-7" /></svg>
+          <span class="share-button-copy">
+            <strong id="shareButtonLabel">Готовим сводку…</strong>
+            <small>за последние 7 дней</small>
+          </span>
+          <svg class="share-chevron" aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+        </button>
+      </footer>
+    </div>
+
+    <dialog class="sheet-dialog roster-dialog" id="rosterDialog" aria-labelledby="rosterTitle">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-header">
+        <div>
+          <p class="section-kicker">НАСТРОЙКА</p>
+          <h2 id="rosterTitle">Список людей</h2>
+        </div>
+        <button class="icon-button" data-close-dialog="rosterDialog" type="button" aria-label="Закрыть">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" /></svg>
+        </button>
+      </header>
+
+      <div class="sheet-body">
+        <form class="add-people-card" id="addPeopleForm">
+          <label for="peopleInput">Добавить людей</label>
+          <p>По одному имени в строке</p>
+          <textarea id="peopleInput" name="people" rows="3" maxlength="4000" placeholder="Анна Смирнова&#10;Иван Петров" autocomplete="off"></textarea>
+          <button class="primary-button" id="addPeopleButton" type="submit">Добавить</button>
+        </form>
+
+        <section class="roster-section" aria-labelledby="activeRosterTitle">
+          <div class="roster-section-heading">
+            <h3 id="activeRosterTitle">В списке</h3>
+            <span id="activeRosterCount">0</span>
+          </div>
+          <div class="manage-list" id="manageList"></div>
+        </section>
+
+        <details class="archived-section" id="archivedSection" hidden>
+          <summary>Убраны из списка <span id="archivedCount">0</span></summary>
+          <div class="manage-list archived-list" id="archivedList"></div>
+        </details>
+
+        <section class="backup-section" aria-labelledby="backupTitle">
+          <h3 id="backupTitle">Сохранность данных</h3>
+          <p>Резервная копия сохраняет людей, настройки и всю историю.</p>
+          <div class="backup-actions">
+            <button class="secondary-button" id="backupButton" type="button">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" /></svg>
+              Резервная копия
+            </button>
+            <button class="secondary-button" id="restoreButton" type="button">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21V9M7 14l5-5 5 5M5 3h14" /></svg>
+              Восстановить
+            </button>
+            <input id="restoreInput" type="file" accept="application/json,.json" hidden />
+          </div>
+        </section>
+      </div>
+    </dialog>
+
+    <dialog class="sheet-dialog install-dialog" id="installDialog" aria-labelledby="installTitle">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-header">
+        <div>
+          <p class="section-kicker">РАБОТАЕТ БЕЗ ИНТЕРНЕТА</p>
+          <h2 id="installTitle">Установите «Отметку»</h2>
+        </div>
+        <button class="icon-button" data-close-dialog="installDialog" type="button" aria-label="Закрыть">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" /></svg>
+        </button>
+      </header>
+      <div class="sheet-body install-steps">
+        <p class="install-lead">Сначала установите приложение, а уже внутри добавляйте список — тогда данные не потеряются при переходе из Safari.</p>
+        <ol>
+          <li><span>1</span><p>Нажмите <strong>«Поделиться»</strong> в Safari.</p></li>
+          <li><span>2</span><p>Выберите <strong>«На экран “Домой”»</strong>, затем <strong>«Добавить»</strong>.</p></li>
+          <li><span>3</span><p>Откройте «Отметку» с экрана «Домой» один раз с интернетом.</p></li>
+          <li><span>4</span><p>Дождитесь надписи <strong>«Готово офлайн»</strong>. Дальше интернет не нужен.</p></li>
+        </ol>
+        <button class="primary-button" id="nativeInstallButton" type="button" hidden>Установить приложение</button>
+        <p class="install-note">iPhone не разрешает сайту нажать «Установить» за вас. Весь список хранится только на вашем устройстве.</p>
+      </div>
+    </dialog>
+
+    <dialog class="preview-dialog" id="previewDialog" aria-labelledby="previewTitle">
+      <header class="preview-header">
+        <div>
+          <p class="section-kicker">СВОДКА ГОТОВА</p>
+          <h2 id="previewTitle">Изображение</h2>
+        </div>
+        <button class="icon-button" data-close-dialog="previewDialog" type="button" aria-label="Закрыть">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" /></svg>
+        </button>
+      </header>
+      <div class="preview-body">
+        <div class="preview-pages" id="previewPages"></div>
+        <p id="shareFallbackText">На этом устройстве не получилось открыть меню «Поделиться».</p>
+        <div class="download-links" id="downloadOverviewLinks"></div>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+      <span id="toastText"></span>
+      <button id="toastAction" type="button" hidden></button>
+    </div>
+  </body>
+</html>
